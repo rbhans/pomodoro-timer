@@ -39,6 +39,7 @@ const PomodoroTimer = () => {
   });
 
   const [currentQuote, setCurrentQuote] = useState(0);
+  const [dynamicQuote, setDynamicQuote] = useState(null);
   const [journalEntry, setJournalEntry] = useState("");
   const [journalEntries, setJournalEntries] = useState(() => {
     const saved = localStorage.getItem("pomodoroSettings");
@@ -52,6 +53,24 @@ const PomodoroTimer = () => {
   const [showExportImport, setShowExportImport] = useState(false);
 
   const intervalRef = useRef(null);
+  const settingsRef = useRef(null);
+  const journalRef = useRef(null);
+
+  // Function to fetch dynamic quote
+  const fetchDynamicQuote = async () => {
+    try {
+      const response = await fetch('https://api.quotable.io/random?maxLength=150');
+      if (response.ok) {
+        const data = await response.json();
+        setDynamicQuote({
+          text: data.content,
+          author: data.author
+        });
+      }
+    } catch (error) {
+      console.log('Failed to fetch dynamic quote, using static content');
+    }
+  };
 
   // Auto-save to localStorage whenever settings change
   useEffect(() => {
@@ -250,8 +269,46 @@ const PomodoroTimer = () => {
 
   // Initialize with random quote
   useEffect(() => {
-    setCurrentQuote(Math.floor(Math.random() * allContent.length));
+    if (Math.random() < 0.3) {
+      fetchDynamicQuote();
+    } else {
+      setCurrentQuote(Math.floor(Math.random() * allContent.length));
+    }
   }, []);
+
+  // Click outside to close settings
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setShowSettings(false);
+      }
+    };
+
+    if (showSettings) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSettings]);
+
+  // Click outside to close journal
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (journalRef.current && !journalRef.current.contains(event.target)) {
+        setShowJournal(false);
+      }
+    };
+
+    if (showJournal) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showJournal]);
 
   // Timer logic
   useEffect(() => {
@@ -292,8 +349,12 @@ const PomodoroTimer = () => {
       setTimeout(() => setIsActive(true), 1000);
     }
 
-    // Show random quote/fact
-    setCurrentQuote(Math.floor(Math.random() * allContent.length));
+    // Show random quote/fact or fetch dynamic quote
+    if (Math.random() < 0.5) {
+      fetchDynamicQuote();
+    } else {
+      setCurrentQuote(Math.floor(Math.random() * allContent.length));
+    }
   };
 
   const playAlarm = () => {
@@ -600,7 +661,7 @@ const PomodoroTimer = () => {
       strokeLinejoin="round"
     >
       <polyline points="1,4 1,10 7,10" />
-      <path d="M3.51,15a9,9,0,0,0,2.13-9.36L1,10" />
+      <path d="M3.51 15a9 9 0 0 0 14.85-3.36L23 10" />
     </svg>
   );
 
@@ -734,12 +795,12 @@ const PomodoroTimer = () => {
           <p
             className={`text-xl md:text-2xl font-light ${theme.text} leading-relaxed mb-4`}
           >
-            "{allContent[currentQuote]?.text}"
+            "{dynamicQuote ? dynamicQuote.text : allContent[currentQuote]?.text}"
           </p>
           <p
             className={`text-sm font-medium ${theme.accent} tracking-wide uppercase`}
           >
-            — {allContent[currentQuote]?.author}
+            — {dynamicQuote ? dynamicQuote.author : allContent[currentQuote]?.author}
           </p>
         </div>
       </div>
@@ -761,6 +822,7 @@ const PomodoroTimer = () => {
       {showSettings && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div
+            ref={settingsRef}
             className={`${theme.card} rounded-xl p-6 border max-w-md w-full max-h-96 overflow-y-auto`}
           >
             <h3 className={`text-xl font-bold ${theme.text} mb-6`}>Settings</h3>
@@ -945,6 +1007,7 @@ const PomodoroTimer = () => {
       {showJournal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div
+            ref={journalRef}
             className={`${theme.card} rounded-xl p-6 border max-w-md w-full max-h-96 overflow-hidden`}
           >
             {isWritingMode ? (
@@ -971,7 +1034,7 @@ const PomodoroTimer = () => {
                         className={`flex items-center space-x-2 px-3 py-2 rounded border transition-colors ${
                           selectedMood === mood.key
                             ? `${theme.button}`
-                            : `${theme.card} ${theme.text} hover:bg-gray-50`
+                            : `${theme.card} ${theme.text} hover:opacity-80`
                         }`}
                       >
                         <span>{mood.icon}</span>
