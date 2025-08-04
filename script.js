@@ -56,19 +56,39 @@ const PomodoroTimer = () => {
   const settingsRef = useRef(null);
   const journalRef = useRef(null);
 
-  // Function to fetch dynamic quote
+  // Function to fetch dynamic content from various APIs
   const fetchDynamicQuote = async () => {
+    const apis = [
+      {
+        url: 'https://api.quotable.io/random?maxLength=150',
+        parser: (data) => ({ text: data.content, author: data.author })
+      },
+      {
+        url: 'https://api.adviceslip.com/advice',
+        parser: (data) => ({ text: data.slip.advice, author: 'Advice Slip' })
+      },
+      {
+        url: 'https://catfact.ninja/fact',
+        parser: (data) => ({ text: data.fact, author: 'Cat Fact' })
+      },
+      {
+        url: 'https://uselessfacts.jsph.pl/random.json?language=en',
+        parser: (data) => ({ text: data.text.replace(/\n/g, ' ').trim(), author: 'Useless Facts' })
+      }
+    ];
+    
+    // Randomly select an API
+    const selectedApi = apis[Math.floor(Math.random() * apis.length)];
+    
     try {
-      const response = await fetch('https://api.quotable.io/random?maxLength=150');
+      const response = await fetch(selectedApi.url);
       if (response.ok) {
         const data = await response.json();
-        setDynamicQuote({
-          text: data.content,
-          author: data.author
-        });
+        const parsed = selectedApi.parser(data);
+        setDynamicQuote(parsed);
       }
     } catch (error) {
-      console.log('Failed to fetch dynamic quote, using static content');
+      console.log('Failed to fetch dynamic content, using static content');
     }
   };
 
@@ -146,6 +166,43 @@ const PomodoroTimer = () => {
       button: "bg-red-600 hover:bg-red-700 text-white",
       card: "bg-white border-red-200",
       progress: "#dc2626",
+    },
+    // Retro Theme Family - Different visual style with rounded corners, shadows, gradients
+    retroWarm: {
+      name: "Retro Warm",
+      background: "bg-gradient-to-br from-orange-100 via-amber-50 to-yellow-100",
+      text: "text-amber-900",
+      accent: "text-orange-700", 
+      button: "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg rounded-xl",
+      card: "bg-white/80 backdrop-blur border-orange-200 shadow-xl rounded-2xl",
+      progress: "#f59e0b",
+    },
+    retroCool: {
+      name: "Retro Cool",
+      background: "bg-gradient-to-br from-cyan-100 via-blue-50 to-indigo-100",
+      text: "text-slate-800",
+      accent: "text-cyan-700",
+      button: "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg rounded-xl",
+      card: "bg-white/80 backdrop-blur border-cyan-200 shadow-xl rounded-2xl",
+      progress: "#06b6d4",
+    },
+    retroDark: {
+      name: "Retro Dark",
+      background: "bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900",
+      text: "text-gray-100",
+      accent: "text-gray-300",
+      button: "bg-gradient-to-r from-slate-600 to-gray-700 hover:from-slate-500 hover:to-gray-600 text-white shadow-lg rounded-xl",
+      card: "bg-gray-800/80 backdrop-blur border-gray-600 shadow-xl rounded-2xl",
+      progress: "#64748b",
+    },
+    retroNeon: {
+      name: "Retro Neon",
+      background: "bg-gradient-to-br from-violet-950 via-purple-900 to-fuchsia-950",
+      text: "text-pink-100",
+      accent: "text-violet-300",
+      button: "bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-lg rounded-xl border border-violet-400/30",
+      card: "bg-violet-900/60 backdrop-blur border-violet-500/30 shadow-xl rounded-2xl",
+      progress: "#8b5cf6",
     },
   };
 
@@ -269,7 +326,7 @@ const PomodoroTimer = () => {
 
   // Initialize with random quote
   useEffect(() => {
-    if (Math.random() < 0.3) {
+    if (Math.random() < 0.7) {
       fetchDynamicQuote();
     } else {
       setCurrentQuote(Math.floor(Math.random() * allContent.length));
@@ -350,7 +407,7 @@ const PomodoroTimer = () => {
     }
 
     // Show random quote/fact or fetch dynamic quote
-    if (Math.random() < 0.5) {
+    if (Math.random() < 0.8) {
       fetchDynamicQuote();
     } else {
       setCurrentQuote(Math.floor(Math.random() * allContent.length));
@@ -442,6 +499,14 @@ const PomodoroTimer = () => {
     }
   };
 
+  const closeReflectionJournal = () => {
+    setShowJournal(false);
+    // If we're in reflection mode and timer completed, auto-start the break
+    if (currentMode === "reflection" && currentTime === 0) {
+      setTimeout(() => setIsActive(true), 1000);
+    }
+  };
+
   const saveJournalEntry = () => {
     if (journalEntry.trim()) {
       const newEntry = {
@@ -456,8 +521,8 @@ const PomodoroTimer = () => {
       setJournalEntry("");
       setSelectedMood("neutral");
       setIsWritingMode(false);
-      setShowJournal(false);
     }
+    closeReflectionJournal();
   };
 
   const openJournal = () => {
@@ -661,7 +726,7 @@ const PomodoroTimer = () => {
       strokeLinejoin="round"
     >
       <polyline points="1,4 1,10 7,10" />
-      <path d="M3.51 15a9 9 0 0 0 14.85-3.36L23 10" />
+      <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
     </svg>
   );
 
@@ -1059,7 +1124,7 @@ const PomodoroTimer = () => {
                   <button
                     onClick={
                       currentMode === "reflection"
-                        ? () => setShowJournal(false)
+                        ? closeReflectionJournal
                         : cancelWriting
                     }
                     className={`px-4 py-2 rounded border ${theme.card} ${theme.text} hover:bg-gray-50 transition-colors`}
