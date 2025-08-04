@@ -1,0 +1,76 @@
+/* Custom styles for PWA */
+body {
+    margin: 0;
+    padding: 0;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Hide scrollbars in journal modal */
+.overflow-y-auto::-webkit-scrollbar {
+    width: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 2px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+/* PWA specific styles */
+@media (display-mode: standalone) {
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* Animation for progress bar */
+@keyframes progressGlow {
+    0%,
+    100% {
+        box-shadow: 0 0 5px currentColor;
+    }
+    50% {
+        box-shadow: 0 0 20px currentColor;
+    }
+}
+
+.progress-glow {
+    animation: progressGlow 2s ease-in-out infinite;
+}
+
+/* Button hover effects */
+.hover\\:scale-105:hover {
+    transform: scale(1.05);
+}
+
+/* Focus styles for accessibility */
+.focus\\:outline-none:focus {
+    outline: none;
+}
+
+.focus\\:ring-2:focus {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* Custom toggle switch */
+.toggle-switch {
+    transition: all 0.3s ease;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+    backdrop-filter: blur(4px);
+}
